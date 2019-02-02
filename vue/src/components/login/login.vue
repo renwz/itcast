@@ -5,6 +5,7 @@
       <el-form
         label-position="top"
         :model="loginObj"
+        :rules="myrules"
         status-icon
         label-width="100px"
         class="demo-ruleForm"
@@ -29,25 +30,33 @@ export default {
     return {
       loginObj: {
         password: "",
-        username: "",
+        username: ""
+      },
+      myrules: {
+        username: [
+          { required: true, message: "请输入用户名", trigger: "blur" },
+          { min: 3, max: 10, message: "长度在 3 到 10 个字符", trigger: "blur" }
+        ],
+        password: [{ required: true, message: "请输入密码", trigger: "blur" }]
       }
     };
   },
   methods: {
-      login(){
-          this.$http.post('/login',this.loginObj)
-          .then(data=>{
-              var {meta,data} = data.data
-              if(meta.status===200){
-                  this.$message({
-                      type:'success',
-                      message:meta.msg
-                  })
-              }else{
-                  this.$message.error(meta.msg)
-              }
-          })
-      }
+    login() {
+      this.$http.post("/login", this.loginObj).then(data => {
+        var { meta, data } = data.data;
+        if (meta.status === 200) {
+          window.localStorage.setItem("token", data.token);
+          this.$router.push("/home");
+          this.$message({
+            type: "success",
+            message: meta.msg
+          });
+        } else {
+          this.$message.error(meta.msg);
+        }
+      });
+    }
   }
 };
 </script>
