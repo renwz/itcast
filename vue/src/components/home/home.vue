@@ -7,7 +7,9 @@
       <el-aside width="200px">
            <Sidebar />
       </el-aside>
-      <el-main>Main</el-main>
+      <el-main>
+          <router-view></router-view>
+      </el-main>
     </el-container>
   </el-container>
 </template>
@@ -17,11 +19,11 @@ import Headers from '@/components/layout/headers.vue'
 import Sidebar from '@/components/layout/sidebar.vue'
 
 export default {
-    components:{
-        Headers,
-        Sidebar
-    }
-};
+  components: {
+    Headers,
+    Sidebar
+  }
+}
 </script>
 
 <style>
