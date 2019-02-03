@@ -4,13 +4,14 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import Element from 'element-ui'
-import axios from 'axios'
-
-import '@/assets/css/index.css'
+// import axios from 'axios'
+import myaxios from '@/assets/js/myaxios.js'
 import 'element-ui/lib/theme-chalk/index.css'
+import '@/assets/css/index.css'
+Vue.use(myaxios)
+
 Vue.use(Element)
-axios.defaults.baseURL = 'http://localhost:8888/api/private/v1'
-Vue.prototype.$http = axios
+
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
