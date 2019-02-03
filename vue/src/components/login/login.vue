@@ -5,10 +5,11 @@
       <el-form
         label-position="top"
         :model="loginObj"
-        :rules="myrules"
         status-icon
+        :rules="rules"
         label-width="100px"
         class="demo-ruleForm"
+        ref="ruleForm"
       >
         <el-form-item label="用户名" prop="username">
           <el-input type="text" v-model="loginObj.username" autocomplete="off"></el-input>
@@ -17,7 +18,7 @@
           <el-input type="password" v-model="loginObj.password" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="login">提交</el-button>
+          <el-button type="primary" @click="login" class="mybtn">登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -26,53 +27,77 @@
 
 <script>
 export default {
-  data() {
+  data () {
     return {
       loginObj: {
-        password: "",
-        username: ""
+        username: '',
+        password: ''
       },
-      myrules: {
+      rules: {
         username: [
-          { required: true, message: "请输入用户名", trigger: "blur" },
-          { min: 3, max: 10, message: "长度在 3 到 10 个字符", trigger: "blur" }
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
         ],
-        password: [{ required: true, message: "请输入密码", trigger: "blur" }]
+        password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
       }
-    };
+    }
   },
   methods: {
-    login() {
-      this.$http.post("/login", this.loginObj).then(data => {
-        var { meta, data } = data.data;
-        if (meta.status === 200) {
-          window.localStorage.setItem("token", data.token);
-          this.$router.push("/home");
-          this.$message({
-            type: "success",
-            message: meta.msg
-          });
+    login () {
+      this.$refs.ruleForm.validate(async valid => {
+        if (valid) {
+          var res = await this.$http.post('/login', this.loginObj)
+          var { meta, data } = res.data
+          if (meta.status === 200) {
+            this.$message({
+              message: meta.msg,
+              type: 'success'
+            })
+            window.localStorage.setItem('token', data.token)
+            this.$router.push('/home')
+          } else {
+            this.$message.error(meta.msg)
+            // this.$message.error('参数不合法，请重新输入')
+            this.$refs.ruleForm.clearValidate(this.rules)
+          }
         } else {
-          this.$message.error(meta.msg);
+          this.$message.error('参数不合法，请重新输入')
         }
-      });
+      })
     }
+    // login () {
+    //   this.$refs.ruleForm.validate(valid => {
+    //     if (valid) {
+    //       this.$http.post('/login', this.loginObj).then(response => {
+    //         var { meta } = response.data
+    //         if (meta.status === 200) {
+    //           alert(meta.msg)
+    //         } else {
+    //           alert(meta.msg)
+    //         }
+    //       })
+    //     } else {
+    //       alert('参数错误')
+    //       return false
+    //     }
+    //   })
+    // }
   }
-};
+}
 </script>
 
 <style>
 .login {
-  background-color: #2c3742;
   width: 100%;
   height: 100%;
+  background: #2c3742;
   position: relative;
 }
 .login .box {
+  position: absolute;
   width: 500px;
   padding: 40px;
   background: #fff;
-  position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -80,7 +105,7 @@ export default {
 .login .box h2 {
   margin-bottom: 20px;
 }
-.el-button {
+.login .box .mybtn {
   width: 100%;
 }
 </style>
