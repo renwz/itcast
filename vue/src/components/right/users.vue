@@ -13,7 +13,7 @@
           </el-input>
         </el-col>
         <el-col :span="2">
-          <el-button type="success" plain @click="addlog">添加按钮</el-button>
+          <el-button type="success" plain>添加按钮</el-button>
         </el-col>
       </el-row>
     </div>
@@ -51,27 +51,6 @@
         :total="total"
       ></el-pagination>
     </div>
-    <!-- 添加用户 -->
-    <el-dialog title="收货地址" :visible.sync="addLog">
-      <el-form :model="addObj">
-        <el-form-item label="用户名" label-width="120px">
-          <el-input v-model="addObj.username" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" label-width="120px">
-          <el-input v-model="addObj.password" autocomplete="off" type="password"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱" label-width="120px">
-          <el-input v-model="addObj.email" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="电话" label-width="120px">
-          <el-input v-model="addObj.mobile" autocomplete="off"></el-input>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="addLog = false">取 消</el-button>
-        <el-button type="primary" @click="add">确 定</el-button>
-      </div>
-    </el-dialog>
   </el-card>
 </template>
 
@@ -83,42 +62,10 @@ export default {
       total: 0,
       pagenum: 1,
       pagesize: 5,
-      search: "",
-      addObj: {
-        username: "",
-        password: "",
-        email: "",
-        mobile: ""
-      },
-      addLog:false
+      search: ""
     };
   },
   methods: {
-    // 打开新增用户按钮
-    addlog(){
-      this.addLog=true
-    },
-    // 添加用户
-    async add() {
-      var res = await this.$http.request({
-        url: `users`,
-        method: "post",
-        data: this.addObj,
-        headers: {
-          Authorization: window.localStorage.getItem("token")
-        }
-      })
-      var {meta, data} = res.data
-      if(meta.status===201){
-        this.$message({
-          message:meta.msg,
-          type:'success'
-        })
-        this.addLog=false
-      }else{
-        this.$message.error(meta.msg)
-      }
-    },
     handleSizeChange(val) {
       this.pagesize = val;
       this.getAllList();
