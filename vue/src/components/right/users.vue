@@ -19,7 +19,7 @@
     </div>
     <el-table :data="list" border style="width: 100%">
       <el-table-column type="index" width="50"></el-table-column>
-      <el-table-column prop="email" label="姓名" width="180"></el-table-column>
+      <el-table-column prop="username" label="姓名" width="180"></el-table-column>
       <el-table-column prop="email" label="郵箱" width="180"></el-table-column>
       <el-table-column prop="mobile" label="電話"></el-table-column>
       <el-table-column prop="address" label="用戶狀態">
@@ -34,7 +34,10 @@
       </el-table-column>
       <el-table-column label="狀態">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+          <!-- {{scope.row}} -->
+          <el-button type="primary" icon="el-icon-edit" size="mini" @click="edit(scope.row.id)">
+           
+          </el-button>
           <el-button type="success" icon="el-icon-check" size="mini"></el-button>
           <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
         </template>
@@ -51,6 +54,25 @@
         :total="total"
       ></el-pagination>
     </div>
+    <!-- 编辑用户 -->
+     <el-dialog title="修改用户" :visible.sync="openEdit">
+              <el-form :model="editList">
+                <el-form-item label="用户名" label-width="120px">
+                  <el-input v-model="editList.username" autocomplete="off"></el-input>
+                </el-form-item>
+                 <el-form-item label="邮箱" label-width="120px">
+                  <el-input v-model="editList.email" autocomplete="off"></el-input>
+                </el-form-item>
+                 <el-form-item label="电话" label-width="120px">
+                  <el-input v-model="editList.mobile" autocomplete="off"></el-input>
+                </el-form-item>
+              
+              </el-form>
+              <div slot="footer" class="dialog-footer">
+                <el-button @click="openEdit = false">取 消</el-button>
+                <el-button type="primary" @click="openEdit = Edit(editList.id)">确 定</el-button>
+              </div>
+            </el-dialog>
   </el-card>
 </template>
 
@@ -62,10 +84,74 @@ export default {
       total: 0,
       pagenum: 1,
       pagesize: 5,
-      search: ""
+      search: "",
+      openEdit: false,
+      editList:[]
     };
   },
   methods: {
+    // 更改状态
+    async switchchange(isTrue,id){
+      // console.log(isTrue,id)
+      var res = await this.$http.request({
+        url: `users/${id}/state/${isTrue}`,
+        method:'put',
+        headers:{
+          Authorization:window.localStorage.getItem('token')
+        }
+      })
+      var {meta, data} = res.data
+      if(meta.status===200){
+        this.$message({
+          message:meta.msg,
+          type:'success'
+        })  
+      }else{
+        this.$message.error(meta.msg)
+      }
+    },
+    // 点击编辑按钮
+    async edit(id){
+      this.openEdit=true
+      var res = await this.$http.request({
+        url:`users/${id}`,
+        method:'get',
+        headers:{
+          Authorization:window.localStorage.getItem('token')
+        }
+      })
+      var {meta,data} = res.data
+      if(meta.status===200){
+        this.editList=data
+      }else{
+        this.$message.error(meta.mag)
+      }
+    },
+    // 修改编辑按钮
+    async Edit(id){
+      var res = await this.$http.request({
+        url:`users/${id}`,
+        method:'put',
+        data:{
+          email:this.editList.email,
+          mobile:this.editList.mobile
+        },
+        headers:{
+          Authorization:window.localStorage.getItem('token')
+        }
+      })
+      var {meta} = res.data
+      if(meta.status===200){
+        this.$message({
+          message:meta.msg,
+          type:'success'
+        })
+        this.getAllList()
+        this.openEdit=false
+      }else{
+        this.$message.error(meta.msg)
+      }
+    },
     handleSizeChange(val) {
       this.pagesize = val;
       this.getAllList();
