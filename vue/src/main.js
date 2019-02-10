@@ -7,12 +7,14 @@ import Element from 'element-ui'
 // import axios from 'axios'
 import myaxios from '@/assets/js/myaxios.js'
 import 'element-ui/lib/theme-chalk/index.css'
+import MyNav from '@/components/layout/mynav.vue'
 import '@/assets/css/index.css'
 Vue.use(myaxios)
 
 Vue.use(Element)
 
 Vue.config.productionTip = false
+Vue.component(MyNav.name, MyNav)
 
 /* eslint-disable no-new */
 new Vue({
