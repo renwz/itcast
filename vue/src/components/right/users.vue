@@ -19,7 +19,7 @@
     </div>
     <el-table :data="list" border style="width: 100%">
       <el-table-column type="index" width="50"></el-table-column>
-      <el-table-column prop="email" label="姓名" width="180"></el-table-column>
+      <el-table-column prop="username" label="姓名" width="180"></el-table-column>
       <el-table-column prop="email" label="郵箱" width="180"></el-table-column>
       <el-table-column prop="mobile" label="電話"></el-table-column>
       <el-table-column prop="address" label="用戶狀態">
@@ -34,9 +34,9 @@
       </el-table-column>
       <el-table-column label="狀態">
         <template slot-scope="scope">
-          <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
-          <el-button type="success" icon="el-icon-check" size="mini"></el-button>
-          <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+          <el-button type="primary" icon="el-icon-edit" size="mini" @click="edit(scope.row.id)"></el-button>
+          <el-button type="success" icon="el-icon-check" size="mini" @click="check(scope.row.id)"></el-button>
+          <el-button type="danger" icon="el-icon-delete" size="mini" @click="del(scope.row.id)"></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -72,85 +72,241 @@
         <el-button type="primary" @click="add">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 编辑用户面板 -->
+    <el-dialog title="收货地址" :visible.sync="editdialog">
+      <el-form :model="editObj">
+        <el-form-item label="用户名" label-width="120px">
+          <el-input v-model="editObj.username" autocomplete="off" disabled="true"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" label-width="120px">
+          <el-input v-model="editObj.email" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="电话" label-width="120px">
+          <el-input v-model="editObj.mobile" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="editdialog = false">取 消</el-button>
+        <el-button type="primary" @click="edi(editObj.id)">确 定</el-button>
+      </div>
+    </el-dialog>
+    <!-- 选择角色面板 -->
+    <el-dialog title="分配角色" :visible.sync="cosplay">
+      <el-form :model="cosObj">
+        <el-form-item label="当前用户" label-width="120px">
+          <el-input v-model="cosObj.username" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="请分配角色" label-width="120px">
+          <el-select  v-model="cosObj.rid" placeholder="请选择活动区域">
+            <el-option :disabled="true" label="请选择角色" :value="-1"></el-option>
+            <el-option :label="item.roleName" v-for="item in seleed" :key="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cosplay = false">取 消</el-button>
+        <el-button type="primary" @click="cosplay = false">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
 <script>
 export default {
-  data() {
+  data () {
     return {
       list: [],
       total: 0,
       pagenum: 1,
       pagesize: 5,
-      search: "",
+      search: '',
       addObj: {
-        username: "",
-        password: "",
-        email: "",
-        mobile: ""
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
       },
-      addLog:false
-    };
+      addLog: false,
+      editObj: {
+        username: '',
+        email: '',
+        mobile: '',
+        id: 0
+      },
+      editdialog: false,
+      cosplay: false,
+      cosObj: [],
+      seleed: []
+    }
   },
   methods: {
-    // 打开新增用户按钮
-    addlog(){
-      this.addLog=true
-    },
-    // 添加用户
-    async add() {
+    // 打开角色面板
+    async check (id) {
+      this.cosplay = true
       var res = await this.$http.request({
-        url: `users`,
-        method: "post",
-        data: this.addObj,
+        url: `users/${id}`,
+        method: 'get',
         headers: {
-          Authorization: window.localStorage.getItem("token")
+          Authorization: window.localStorage.getItem('token')
+        }
+      })
+      var { meta, data } = res.data
+      if (meta.status === 200) {
+        this.cosObj = data
+        this.sele()
+      } else {
+        this.$message.error(meta.status)
+      }
+    },
+    async sele () {
+      var res = await this.$http.request({
+        url: `roles`,
+        method: 'get',
+        headers: {
+          Authorization: window.localStorage.getItem('token')
         }
       })
       var {meta, data} = res.data
-      if(meta.status===201){
-        this.$message({
-          message:meta.msg,
-          type:'success'
+      if (meta.status == 200) {
+        this.seleed = data
+      } else {
+        this.$message.error(meta.status)
+      }
+    },
+    // 删除
+    del (id) {
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+        .then(async () => {
+          var res = await this.$http.request({
+            url: `users/${id}`,
+            method: 'delete',
+            headers: {
+              Authorization: window.localStorage.getItem('token')
+            }
+          })
+          var { meta, data } = res.data
+          if (meta.status === 200) {
+            this.$message({
+              message: meta.msg,
+              type: 'success'
+            })
+            this.getAllList()
+          } else {
+            this.$message.error(meta.msg)
+          }
         })
-        this.addLog=false
-      }else{
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
+    },
+    // 编辑用户
+    async edit (id) {
+      // console.log(id)
+      this.editdialog = true
+      var res = await this.$http.request({
+        url: `users/${id}`,
+        method: 'get',
+        headers: {
+          Authorization: window.localStorage.getItem('token')
+        }
+      })
+      var { meta, data } = res.data
+      if (meta.status === 200) {
+        this.editObj = data
+      } else {
+        this.$message.error(meta.status)
+      }
+    },
+    // 编辑用户提交
+    async edi (id) {
+      var res = await this.$http.request({
+        url: `users/${id}`,
+        method: 'put',
+        headers: {
+          Authorization: window.localStorage.getItem('token')
+        },
+        data: {
+          email: this.editObj.email,
+          mobile: this.editObj.mobile
+        }
+      })
+      var { meta, data } = res.data
+      if (meta.status === 200) {
+        this.$message({
+          message: meta.msg,
+          type: 'success'
+        })
+        this.getAllList()
+        this.editdialog = false
+      } else {
+        this.$message.error(meta.msg)
+        this.editdialog = false
+      }
+    },
+    // 打开新增用户按钮
+    addlog () {
+      this.addLog = true
+    },
+    // 添加用户
+    async add () {
+      var res = await this.$http.request({
+        url: `users`,
+        method: 'post',
+        data: this.addObj,
+        headers: {
+          Authorization: window.localStorage.getItem('token')
+        }
+      })
+      var { meta, data } = res.data
+      if (meta.status === 201) {
+        this.$message({
+          message: meta.msg,
+          type: 'success'
+        })
+        this.addLog = false
+      } else {
         this.$message.error(meta.msg)
       }
     },
-    handleSizeChange(val) {
-      this.pagesize = val;
-      this.getAllList();
+    handleSizeChange (val) {
+      this.pagesize = val
+      this.getAllList()
     },
-    handleCurrentChange(val) {
-      this.pagenum = val;
-      this.getAllList();
+    handleCurrentChange (val) {
+      this.pagenum = val
+      this.getAllList()
     },
-    async getAllList() {
+    async getAllList () {
       var res = await this.$http.request({
-        method: "get",
+        method: 'get',
         url: `users?query=${this.search}&pagenum=${this.pagenum}&pagesize=${
           this.pagesize
         }`,
         headers: {
-          Authorization: window.localStorage.getItem("token")
+          Authorization: window.localStorage.getItem('token')
         }
-      });
-      var { meta, data } = res.data;
+      })
+      var { meta, data } = res.data
       if (meta.status === 200) {
-        this.list = data.users;
-        this.total = data.total;
+        this.list = data.users
+        this.total = data.total
       }
     },
-    seach() {
-      this.getAllList();
+    seach () {
+      this.getAllList()
     }
   },
-  mounted() {
-    this.getAllList();
+  mounted () {
+    this.getAllList()
   }
-};
+}
 </script>
 
 <style>
