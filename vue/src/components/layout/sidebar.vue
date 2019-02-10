@@ -1,37 +1,53 @@
 <template>
-  <el-menu :router="true" :unique-opened="true" default-active="2" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
-    <el-submenu index="1">
-      <template slot="title">
-        <i class="el-icon-location"></i>
-        <span>用户管理</span>
-      </template>
-      <el-menu-item-group>
-        <el-menu-item index="/users">用户列表</el-menu-item>
-      </el-menu-item-group>
-    </el-submenu>
-    <el-menu-item index="2">
-      <i class="el-icon-menu"></i>
-      <span slot="title">权限管理</span>
-    </el-menu-item>
-    <el-menu-item index="3" disabled>
-      <i class="el-icon-document"></i>
-      <span slot="title">导航三</span>
-    </el-menu-item>
-    <el-menu-item index="4">
-      <i class="el-icon-setting"></i>
-      <span slot="title">导航四</span>
-    </el-menu-item>
-  </el-menu>
+     <el-menu :router="true" default-active="3" class="mymenu el-menu-vertical-demo" :unique-opened="true">
+          <el-submenu :index="'/'+item1.path" v-for="item1 in leftList" :key="item1.id">
+            <template slot="title">
+              <i class="el-icon-location"></i>
+              <span>{{item1.authName}}</span>
+            </template>
+            <el-menu-item-group>
+              <el-menu-item :index="'/'+item2.path" v-for="item2 in item1.children" :key="item2.id">
+                <i class="el-icon-location"></i>
+                <span>{{item2.authName}}</span>
+              </el-menu-item>
+            </el-menu-item-group>
+          </el-submenu>
+      </el-menu>
 </template>
 
 <script>
 export default {
-
+  data () {
+    return {
+      leftList: []
+    }
+  },
+  methods: {
+    async getAll () {
+      var res = await this.$http.request({
+        url: '/menus',
+        method: 'get'
+        // headers: {
+        //   Authorization: window.localStorage.getItem('token')
+        // }
+      })
+      var {meta, data} = res.data
+      if (meta.status === 200) {
+        this.leftList = data
+      } else {
+        this.$message.error(meta.msg)
+      }
+    }
+  },
+  mounted () {
+    this.getAll()
+  }
 }
 </script>
 
 <style>
-.el-menu{
+/* 侧边栏样式 */
+.mymenu {
     height: 100%;
 }
 </style>
